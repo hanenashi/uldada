@@ -8,13 +8,13 @@ It is a small browser userscript for Tampermonkey, Violentmonkey, or a compatibl
 
 ## What it does
 
-1. Choose how many generated lines you want (2–30); the choice is remembered locally.
-2. Select **Generate preview**.
-3. Edit the generated text if you wish.
+1. Tap the floating **Uldada** pill. Drag it anywhere convenient; its position is remembered on this club.
+2. Choose how many generated lines you want (2–30); the choice is remembered locally.
+3. Select **Generate preview** and edit the generated text if you wish.
 4. Select **Put into post field**.
 5. Review the normal Okoun composer and submit the post yourself.
 
-The script never submits a post. If the composer already contains text, it asks before replacing it.
+The mobile-friendly floating menu keeps the preview out of the already cramped Okoun composer. The script never submits a post. If the composer already contains text, it asks before replacing it.
 
 ## Install
 
