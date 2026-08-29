@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Uldada for Neftipné creatory
 // @namespace    https://github.com/hanenashi/uldada
-// @version      1.5.0
+// @version      1.6.0
 // @description  A draggable Ultra-dada launcher for Neftipné creatory: generate, preview, then copy into the composer.
 // @author       hanenashi
 // @match        https://www.okoun.cz/boards/neftipne_creatory*
@@ -14,7 +14,7 @@
 
 (() => {
   "use strict";
-  const VERSION = "1.5.0";
+  const VERSION = "1.6.0";
   const CREATOR_URL = "https://yirkha.fud.cz/creators/ultradada2.php";
   const DEFAULT_LINES = 3;
   const LINES_KEY = "uldada-line-count";
@@ -22,6 +22,7 @@
   const SCALE_KEY = "uldada-ui-scale";
   const PREVIEW_SCALE_KEY = "uldada-preview-text-scale";
   const BLANK_LINE_KEY = "uldada-blank-lines";
+  const PREVIEW_ONLY_SPACING_KEY = "uldada-preview-only-spacing";
   const FORMAT_KEY = "uldada-post-format";
   const SIZE_KEY = "uldada-menu-size";
   const FORMAT_VALUES = new Set(["plain", "html", "radeox", "markdown"]);
@@ -49,6 +50,10 @@
     try { return Boolean(await GM_getValue(BLANK_LINE_KEY, false)); } catch { return false; }
   };
   const saveBlankLines = (value) => { try { void GM_setValue(BLANK_LINE_KEY, Boolean(value)); } catch { /* Storage is optional. */ } };
+  const savedPreviewOnlySpacing = async () => {
+    try { return Boolean(await GM_getValue(PREVIEW_ONLY_SPACING_KEY, false)); } catch { return false; }
+  };
+  const savePreviewOnlySpacing = (value) => { try { void GM_setValue(PREVIEW_ONLY_SPACING_KEY, Boolean(value)); } catch { /* Storage is optional. */ } };
   const savedFormat = async () => {
     try {
       const value = await GM_getValue(FORMAT_KEY, "plain");
@@ -131,6 +136,7 @@
             <label class="uldada-setting-label" for="uldada-scale">GUI scale <output id="uldada-scale-value"></output></label><input id="uldada-scale" type="range" min="100" max="300" step="5">
             <label class="uldada-setting-label" for="uldada-preview-scale">Preview text scale <output id="uldada-preview-scale-value"></output></label><input id="uldada-preview-scale" type="range" min="100" max="300" step="5">
             <label class="uldada-setting-toggle" for="uldada-blank-lines"><input id="uldada-blank-lines" type="checkbox"> Leave one blank line between generated lines</label>
+            <label class="uldada-setting-toggle" for="uldada-preview-only-spacing"><input id="uldada-preview-only-spacing" type="checkbox"> Show blank lines in preview only</label>
             <label class="uldada-setting-label" for="uldada-format">Okoun post format</label><select id="uldada-format"><option value="plain">Text</option><option value="html">HTML</option><option value="radeox">Radeox</option><option value="markdown">Markdown</option></select>
             <p class="uldada-caption">Drag either lower corner to resize the sheet.</p>
           </div>
@@ -154,15 +160,17 @@
     const previewScaleInput = wrap.querySelector("#uldada-preview-scale");
     const previewScaleOutput = wrap.querySelector("#uldada-preview-scale-value");
     const blankLinesInput = wrap.querySelector("#uldada-blank-lines");
+    const previewOnlySpacingInput = wrap.querySelector("#uldada-preview-only-spacing");
     const formatInput = wrap.querySelector("#uldada-format");
     const nativeFormat = form.querySelector('select[name="bodyType"]');
-    const [lines, initialScale, initialPreviewScale, initialBlankLines, initialFormat, initialSize] = await Promise.all([savedLines(), savedScale(), savedPreviewScale(), savedBlankLines(), savedFormat(), savedSize()]);
+    const [lines, initialScale, initialPreviewScale, initialBlankLines, initialPreviewOnlySpacing, initialFormat, initialSize] = await Promise.all([savedLines(), savedScale(), savedPreviewScale(), savedBlankLines(), savedPreviewOnlySpacing(), savedFormat(), savedSize()]);
     countInput.value = String(lines);
     scaleInput.value = String(initialScale);
     scaleOutput.textContent = `${initialScale}%`;
     previewScaleInput.value = String(initialPreviewScale);
     previewScaleOutput.textContent = `${initialPreviewScale}%`;
     blankLinesInput.checked = initialBlankLines;
+    previewOnlySpacingInput.checked = initialPreviewOnlySpacing;
     formatInput.value = initialFormat;
     document.documentElement.style.setProperty("--uldada-scale", String(initialScale / 100));
     document.documentElement.style.setProperty("--uldada-chrome", String(initialScale / 100));
@@ -292,6 +300,7 @@
       savePreviewScale(value);
     });
     blankLinesInput.addEventListener("change", () => saveBlankLines(blankLinesInput.checked));
+    previewOnlySpacingInput.addEventListener("change", () => savePreviewOnlySpacing(previewOnlySpacingInput.checked));
     formatInput.addEventListener("change", () => { saveFormat(formatInput.value); applyNativeFormat(); });
     preview.addEventListener("input", () => { copyButton.disabled = !preview.value.trim(); });
     generateButton.addEventListener("click", async () => {
@@ -301,7 +310,7 @@
       finally { generateButton.disabled = false; }
     });
     copyButton.addEventListener("click", () => {
-      const text = preview.value.trim();
+      const text = previewOnlySpacingInput.checked ? formatGeneratedLines(preview.value.trim(), false) : preview.value.trim();
       if (!text) return setStatus("Generate or enter text first.", true);
       if (postBody.value.trim() && !window.confirm("Replace the text already in the club post field?")) return setStatus("Kept the existing post text.");
       applyNativeFormat();

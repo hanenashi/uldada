@@ -14,7 +14,7 @@ It is a small browser userscript for Tampermonkey, Violentmonkey, or a compatibl
 4. Select **Put into post field**.
 5. Review the normal Okoun composer and submit the post yourself.
 
-The mobile-friendly floating menu keeps the preview out of the already cramped Okoun composer. The creator pane prioritizes its preview; the separate settings pane remembers independent 100–300% GUI and preview-text scales, plus the matching native Okoun format (Text, HTML, Radeox, or Markdown), with Text as the default. Drag either lower sheet corner to resize it. The script never submits a post. If the composer already contains text, it asks before replacing it.
+The mobile-friendly floating menu keeps the preview out of the already cramped Okoun composer. The creator pane prioritizes its preview; the separate settings pane remembers independent 100–300% GUI and preview-text scales, generated-line spacing (optionally preview-only), and the matching native Okoun format (Text, HTML, Radeox, or Markdown), with Text as the default. Drag either lower sheet corner to resize it. The script never submits a post. If the composer already contains text, it asks before replacing it.
 
 ## Install
 
