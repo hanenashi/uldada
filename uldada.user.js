@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Uldada for Neftipné creatory
 // @namespace    https://github.com/hanenashi/uldada
-// @version      1.4.0
+// @version      1.5.0
 // @description  A draggable Ultra-dada launcher for Neftipné creatory: generate, preview, then copy into the composer.
 // @author       hanenashi
 // @match        https://www.okoun.cz/boards/neftipne_creatory*
@@ -14,13 +14,14 @@
 
 (() => {
   "use strict";
-  const VERSION = "1.4.0";
+  const VERSION = "1.5.0";
   const CREATOR_URL = "https://yirkha.fud.cz/creators/ultradada2.php";
   const DEFAULT_LINES = 3;
   const LINES_KEY = "uldada-line-count";
   const POSITION_KEY = "uldada-position";
   const SCALE_KEY = "uldada-ui-scale";
   const PREVIEW_SCALE_KEY = "uldada-preview-text-scale";
+  const BLANK_LINE_KEY = "uldada-blank-lines";
   const FORMAT_KEY = "uldada-post-format";
   const SIZE_KEY = "uldada-menu-size";
   const FORMAT_VALUES = new Set(["plain", "html", "radeox", "markdown"]);
@@ -44,6 +45,10 @@
     try { return previewScalePercent(await GM_getValue(PREVIEW_SCALE_KEY, matchMedia("(pointer: coarse)").matches ? 200 : 100)); } catch { return previewScalePercent(0); }
   };
   const savePreviewScale = (value) => { try { void GM_setValue(PREVIEW_SCALE_KEY, previewScalePercent(value)); } catch { /* Storage is optional. */ } };
+  const savedBlankLines = async () => {
+    try { return Boolean(await GM_getValue(BLANK_LINE_KEY, false)); } catch { return false; }
+  };
+  const saveBlankLines = (value) => { try { void GM_setValue(BLANK_LINE_KEY, Boolean(value)); } catch { /* Storage is optional. */ } };
   const savedFormat = async () => {
     try {
       const value = await GM_getValue(FORMAT_KEY, "plain");
@@ -65,6 +70,7 @@
     copy.querySelectorAll("br").forEach((br) => br.replaceWith("\n"));
     return copy.textContent.replace(/\n{3,}/g, "\n\n").trim();
   };
+  const formatGeneratedLines = (text, leaveBlankLines) => text.replace(/\n+/g, leaveBlankLines ? "\n\n" : "\n");
   const generate = (count) => new Promise((resolve, reject) => {
     GM_xmlhttpRequest({
       method: "GET", url: `${CREATOR_URL}?n=${encodeURIComponent(count)}`,
@@ -96,6 +102,7 @@
       #uldada-menu button{min-height:calc(44px * var(--uldada-scale));padding:calc(9px * var(--uldada-scale)) calc(12px * var(--uldada-scale));border:1px solid rgba(255,255,255,.16);border-radius:calc(9px * var(--uldada-scale));background:rgba(255,255,255,.1);color:#fff;cursor:pointer;font:inherit;font-weight:720}.uldada-close{min-width:calc(36px * var(--uldada-scale));min-height:calc(36px * var(--uldada-scale))!important;padding:0!important;border-radius:50%!important;font-size:calc(22px * var(--uldada-scale))!important;line-height:1!important}.uldada-primary{flex:1;background:rgba(80,160,255,.3)!important;border-color:rgba(80,160,255,.55)!important}.uldada-copy{flex:1;background:rgba(105,200,157,.22)!important;border-color:rgba(105,200,157,.45)!important}#uldada-menu button:hover:not(:disabled),#uldada-menu button:focus-visible{filter:brightness(1.18)}#uldada-menu button:focus-visible,#uldada-preview:focus-visible,#uldada-line-count:focus-visible{outline:3px solid #9dd0ff;outline-offset:2px}#uldada-menu button:disabled{cursor:not-allowed;opacity:.48}#uldada-status.uldada-error{color:#ffaaa9;font-weight:700}
       /* The main pane gives the generated text most of the available space. */
       #uldada-wrap{font-size:calc(14px * var(--uldada-chrome));-webkit-tap-highlight-color:transparent}#uldada-fab{gap:calc(7px * var(--uldada-chrome));min-height:calc(44px * var(--uldada-chrome));padding:calc(9px * var(--uldada-chrome)) calc(14px * var(--uldada-chrome));-webkit-tap-highlight-color:transparent}#uldada-menu{width:min(calc(360px * var(--uldada-chrome)),calc(100vw - 20px));padding:calc(12px * var(--uldada-chrome));border-radius:calc(16px * var(--uldada-chrome))}.uldada-heading{gap:calc(8px * var(--uldada-chrome))}.uldada-heading h2{font-size:calc(18px * var(--uldada-chrome))}.uldada-pane{display:flex;flex:1;flex-direction:column;gap:calc(8px * var(--uldada-chrome));min-height:0}.uldada-pane[hidden]{display:none!important}.uldada-subheading{display:flex;align-items:center;gap:8px}.uldada-subheading h3{margin:0;flex:1;font-size:calc(16px * var(--uldada-chrome))}.uldada-icon{min-width:calc(36px * var(--uldada-chrome))!important;min-height:calc(36px * var(--uldada-chrome))!important;padding:0!important;border-radius:50%!important;font-size:calc(18px * var(--uldada-chrome))!important}.uldada-controls,.uldada-actions{gap:calc(7px * var(--uldada-chrome))}.uldada-controls label{font-size:calc(13px * var(--uldada-chrome))}#uldada-line-count{width:calc(56px * var(--uldada-chrome));min-height:calc(38px * var(--uldada-chrome));padding:calc(5px * var(--uldada-chrome));font-size:calc(14px * var(--uldada-chrome))}#uldada-preview{flex:1;min-height:clamp(15rem,48dvh,30rem);padding:calc(10px * var(--uldada-chrome));border-radius:calc(10px * var(--uldada-chrome));font-size:calc(15px * var(--uldada-preview-scale))}#uldada-menu button{min-height:calc(38px * var(--uldada-chrome));padding:calc(6px * var(--uldada-chrome)) calc(9px * var(--uldada-chrome));font-size:calc(13px * var(--uldada-chrome))}.uldada-settings-pane{gap:calc(12px * var(--uldada-chrome))}.uldada-settings-grid{gap:calc(9px * var(--uldada-chrome));margin:0}.uldada-setting-label{font-size:calc(13px * var(--uldada-chrome))}.uldada-settings input[type="range"]{min-height:calc(34px * var(--uldada-chrome))}.uldada-settings select{min-height:calc(38px * var(--uldada-chrome));padding:calc(5px * var(--uldada-chrome));font-size:calc(14px * var(--uldada-chrome))}.uldada-resize{width:calc(26px * var(--uldada-chrome));height:calc(26px * var(--uldada-chrome))}.uldada-resize::after{width:calc(8px * var(--uldada-chrome));height:calc(8px * var(--uldada-chrome))}.uldada-caption,#uldada-status{font-size:calc(12px * var(--uldada-chrome))}
+      .uldada-setting-toggle{display:flex;align-items:center;gap:.6em;color:#e7eaf0;font-size:calc(13px * var(--uldada-chrome));font-weight:650}.uldada-setting-toggle input{width:1.15em;height:1.15em;margin:0;accent-color:#6eaef8}
       @media(max-width:420px){.uldada-actions{flex-direction:row;align-items:center}.uldada-controls{align-items:center;flex-wrap:nowrap}.uldada-primary,.uldada-copy{width:auto}}@media(prefers-reduced-motion:reduce){#uldada-fab,.uldada-chevron{transition:none}}
     `;
     document.head.append(style);
@@ -123,6 +130,7 @@
           <div class="uldada-settings-grid">
             <label class="uldada-setting-label" for="uldada-scale">GUI scale <output id="uldada-scale-value"></output></label><input id="uldada-scale" type="range" min="100" max="300" step="5">
             <label class="uldada-setting-label" for="uldada-preview-scale">Preview text scale <output id="uldada-preview-scale-value"></output></label><input id="uldada-preview-scale" type="range" min="100" max="300" step="5">
+            <label class="uldada-setting-toggle" for="uldada-blank-lines"><input id="uldada-blank-lines" type="checkbox"> Leave one blank line between generated lines</label>
             <label class="uldada-setting-label" for="uldada-format">Okoun post format</label><select id="uldada-format"><option value="plain">Text</option><option value="html">HTML</option><option value="radeox">Radeox</option><option value="markdown">Markdown</option></select>
             <p class="uldada-caption">Drag either lower corner to resize the sheet.</p>
           </div>
@@ -145,14 +153,16 @@
     const scaleOutput = wrap.querySelector("#uldada-scale-value");
     const previewScaleInput = wrap.querySelector("#uldada-preview-scale");
     const previewScaleOutput = wrap.querySelector("#uldada-preview-scale-value");
+    const blankLinesInput = wrap.querySelector("#uldada-blank-lines");
     const formatInput = wrap.querySelector("#uldada-format");
     const nativeFormat = form.querySelector('select[name="bodyType"]');
-    const [lines, initialScale, initialPreviewScale, initialFormat, initialSize] = await Promise.all([savedLines(), savedScale(), savedPreviewScale(), savedFormat(), savedSize()]);
+    const [lines, initialScale, initialPreviewScale, initialBlankLines, initialFormat, initialSize] = await Promise.all([savedLines(), savedScale(), savedPreviewScale(), savedBlankLines(), savedFormat(), savedSize()]);
     countInput.value = String(lines);
     scaleInput.value = String(initialScale);
     scaleOutput.textContent = `${initialScale}%`;
     previewScaleInput.value = String(initialPreviewScale);
     previewScaleOutput.textContent = `${initialPreviewScale}%`;
+    blankLinesInput.checked = initialBlankLines;
     formatInput.value = initialFormat;
     document.documentElement.style.setProperty("--uldada-scale", String(initialScale / 100));
     document.documentElement.style.setProperty("--uldada-chrome", String(initialScale / 100));
@@ -281,11 +291,12 @@
       document.documentElement.style.setProperty("--uldada-preview-scale", String(value / 100));
       savePreviewScale(value);
     });
+    blankLinesInput.addEventListener("change", () => saveBlankLines(blankLinesInput.checked));
     formatInput.addEventListener("change", () => { saveFormat(formatInput.value); applyNativeFormat(); });
     preview.addEventListener("input", () => { copyButton.disabled = !preview.value.trim(); });
     generateButton.addEventListener("click", async () => {
       const count = lineCount(countInput.value); countInput.value = String(count); saveLines(count); generateButton.disabled = true; setStatus("Generating…");
-      try { preview.value = await generate(count); copyButton.disabled = !preview.value.trim(); setStatus("Preview ready. Edit it, then copy it to the club composer."); place(); }
+      try { preview.value = formatGeneratedLines(await generate(count), blankLinesInput.checked); copyButton.disabled = !preview.value.trim(); setStatus("Preview ready. Edit it, then copy it to the club composer."); place(); }
       catch (error) { setStatus(error instanceof Error ? error.message : "Could not generate a preview.", true); }
       finally { generateButton.disabled = false; }
     });
